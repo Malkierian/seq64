@@ -28,6 +28,46 @@
 #include "JuceHeaderConsole.hpp"
 #else
 #include <JuceHeader.h>
+#include "nlohmann/json.hpp"
+
+static String DefaultDirectory = ".";
+
+class seq64Application : public JUCEApplication
+{
+public:
+    seq64Application() {}
+
+    static seq64Application* Instance;
+
+    String SettingsGetString(String key, String defaultValue);
+    int SettingsGetInteger(String key, int defaultValue);
+    void SettingsSetString(String key, String value);
+    void SettingsSetInteger(String key, int value);
+
+    const String getApplicationName() override;
+    const String getApplicationVersion() override;
+    bool moreThanOneInstanceAllowed() override;
+
+    void initialise(const String& commandLine) override;
+    void shutdown() override;
+    void systemRequestedQuit() override;
+    void anotherInstanceStarted(const String& commandLine) override;
+
+    class MainWindow : public DocumentWindow
+    {
+    public:
+        MainWindow(String name);
+        void closeButtonPressed() override;
+    private:
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainWindow)
+    };
+
+private:
+    std::unique_ptr<MainWindow> mainWindow;
+    nlohmann::json settings;
+
+    void SaveSettings();
+};
 #endif
 
 inline bool isInt(String str, bool allowNegative = true){

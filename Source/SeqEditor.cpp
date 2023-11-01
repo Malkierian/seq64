@@ -788,13 +788,14 @@ void SeqEditor::buttonClicked (juce::Button* buttonThatWasClicked)
         midiopts.setProperty("q_other_amp", txtQuantOther->getText().getFloatValue(), nullptr);
 
         //TODO default files
-        File f = File::getSpecialLocation(File::userHomeDirectory); //TODO SEQ64::readFolderProperty("midiimportfolder");
+        File f = File(seq64Application::Instance->SettingsGetString("midiImportFolder", DefaultDirectory));
         FileChooser box("Select a MIDI to load...", f, "*.mid;*.midi;*.rmi", true);
         File oldwd = File::getCurrentWorkingDirectory();
         bool hitokay = box.browseForFileToOpen();
         oldwd.setAsCurrentWorkingDirectory();
         if(!hitokay) return;
         f = box.getResult();
+        seq64Application::Instance->SettingsSetString("midiImportFolder", f.getFullPathName());
         if(!f.existsAsFile()){
             std::cout << "File " << f.getFullPathName() << " does not exist!";
             return;
@@ -815,13 +816,14 @@ void SeqEditor::buttonClicked (juce::Button* buttonThatWasClicked)
             optInstOrig->getToggleState() ? "original" :
             optInstGM10->getToggleState() ? "gm_ch10" : "gm_multi", nullptr);
 
-        File savelocation = File::getSpecialLocation(File::userHomeDirectory); //SEQ64::readFolderProperty("midifolder");
+        File savelocation = File(seq64Application::Instance->SettingsGetString("midiExportFolder", DefaultDirectory));
         FileChooser box("Save MIDI", savelocation, "*.mid", true);
         File oldwd = File::getCurrentWorkingDirectory();
         bool hitokay = box.browseForFileToSave(true);
         oldwd.setAsCurrentWorkingDirectory();
         if(!hitokay) return;
         savelocation = box.getResult();
+        seq64Application::Instance->SettingsSetString("midiExportFolder", savelocation.getFullPathName());
         startSeqOperation("MIDI export", &SeqFile::exportMIDI, savelocation, midiopts);
         //[/UserButtonCode_btnExportMIDI]
     }
@@ -831,13 +833,14 @@ void SeqEditor::buttonClicked (juce::Button* buttonThatWasClicked)
         ValueTree abi = getABI();
         if(!abi.isValid()) return;
         if(!checkSeqPresence(false)) return;
-        File f = File::getSpecialLocation(File::userHomeDirectory); //TODO SEQ64::readFolderProperty("romfolder");
+        File f = File(seq64Application::Instance->SettingsGetString("musImportFolder", DefaultDirectory));
         FileChooser box("Load .mus", f, "*.mus", true);
         File oldwd = File::getCurrentWorkingDirectory();
         bool hitokay = box.browseForFileToOpen();
         oldwd.setAsCurrentWorkingDirectory();
         if(!hitokay) return;
         f = box.getResult();
+        seq64Application::Instance->SettingsSetString("musImportFolder", f.getFullPathName());
         seq.reset(new SeqFile(abi));
         startSeqOperation(".mus import", &SeqFile::importMus, f);
         //[/UserButtonCode_btnImportMus]
@@ -846,13 +849,14 @@ void SeqEditor::buttonClicked (juce::Button* buttonThatWasClicked)
     {
         //[UserButtonCode_btnExportMus] -- add your button handler code here..
         if(!checkSeqPresence(true)) return;
-        File savelocation = File::getSpecialLocation(File::userHomeDirectory); //SEQ64::readFolderProperty("comfolder");
+        File savelocation = File(seq64Application::Instance->SettingsGetString("musExportFolder", DefaultDirectory));
         FileChooser box("Save .mus", savelocation, "*.mus", true);
         File oldwd = File::getCurrentWorkingDirectory();
         bool hitokay = box.browseForFileToSave(true);
         oldwd.setAsCurrentWorkingDirectory();
         if(!hitokay) return;
         savelocation = box.getResult();
+        seq64Application::Instance->SettingsSetString("musExportFolder", savelocation.getFullPathName());
         int dialect = optMusCommunity->getToggleState() ? 0 : optMusCanon->getToggleState() ? 2 : 4;
         dialect |= optStyleSFX->getToggleState() ? 1 : 0;
         startSeqOperation(".mus export", &SeqFile::exportMus, savelocation, dialect);
@@ -864,13 +868,14 @@ void SeqEditor::buttonClicked (juce::Button* buttonThatWasClicked)
         ValueTree abi = getABI();
         if(!abi.isValid()) return;
         if(!checkSeqPresence(false)) return;
-        File f = File::getSpecialLocation(File::userHomeDirectory); //TODO SEQ64::readFolderProperty("romfolder");
+        File f = File(seq64Application::Instance->SettingsGetString("comImportFolder", DefaultDirectory));
         FileChooser box("Load .com/.aseq", f, "*.com;*.aseq;*.seq;*.m64;*.bin;*.seq", true);
         File oldwd = File::getCurrentWorkingDirectory();
         bool hitokay = box.browseForFileToOpen();
         oldwd.setAsCurrentWorkingDirectory();
         if(!hitokay) return;
         f = box.getResult();
+        seq64Application::Instance->SettingsSetString("comImportFolder", f.getFullPathName());
         seq.reset(new SeqFile(abi));
         startSeqOperation(".com/.aseq import", &SeqFile::importCom, f);
         //[/UserButtonCode_btnImportCom]
@@ -879,13 +884,14 @@ void SeqEditor::buttonClicked (juce::Button* buttonThatWasClicked)
     {
         //[UserButtonCode_btnExportCom] -- add your button handler code here..
         if(!checkSeqPresence(true)) return;
-        File savelocation = File::getSpecialLocation(File::userHomeDirectory); //SEQ64::readFolderProperty("comfolder");
+        File savelocation = File(seq64Application::Instance->SettingsGetString("comExportFolder", DefaultDirectory));
         FileChooser box("Save .com/.aseq", savelocation, "*.com;*.aseq;*.seq;*.m64;*.bin;*.seq", true);
         File oldwd = File::getCurrentWorkingDirectory();
         bool hitokay = box.browseForFileToSave(true);
         oldwd.setAsCurrentWorkingDirectory();
         if(!hitokay) return;
         savelocation = box.getResult();
+        seq64Application::Instance->SettingsSetString("comExportFolder", savelocation.getFullPathName());
         startSeqOperation(".com/.aseq export", &SeqFile::exportCom, savelocation);
         //[/UserButtonCode_btnExportCom]
     }

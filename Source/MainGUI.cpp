@@ -25,59 +25,96 @@
 #include "Common.hpp"
 #include "SeqEditor.hpp"
 #include "CommandLine.hpp"
+#include <fstream>
 
-class seq64Application : public JUCEApplication
-{
-public:
-    seq64Application() {}
+seq64Application* seq64Application::Instance;
 
-    const String getApplicationName() override       { return "SEQ64 V" + String(ProjectInfo::versionString); }
-    const String getApplicationVersion() override    { return ProjectInfo::versionString; }
-    bool moreThanOneInstanceAllowed() override       { return true; }
+const String seq64Application::getApplicationName() {
+    return "SEQ64 V" + String(ProjectInfo::versionString);
+}
+const String seq64Application::getApplicationVersion() {
+    return ProjectInfo::versionString;
+}
+bool seq64Application::moreThanOneInstanceAllowed() {
+    return true;
+}
 
-    void initialise (const String& commandLine) override {
-        if(!commandLine.isEmpty()){
-            StringArray args = StringArray::fromTokens(commandLine, true);
-            args.insert(0, "seq64_gui"); //Arg 0 is the program name and is ignored
-            seq64_cli(args);
-            quit();
-        }else{
-            mainWindow.reset (new MainWindow (getApplicationName()));
-        }
-    }
-    void shutdown() override {
-        mainWindow = nullptr;
-    }
-    void systemRequestedQuit() override {
+void seq64Application::SaveSettings() {
+    std::ofstream o("./settings.json");
+    o << std::setw(4) << settings << std::endl;
+    o.close();
+}
+
+void seq64Application::initialise (const String& commandLine) {
+    if(!commandLine.isEmpty()){
+        StringArray args = StringArray::fromTokens(commandLine, true);
+        args.insert(0, "seq64_gui"); //Arg 0 is the program name and is ignored
+        seq64_cli(args);
         quit();
-    }
-    void anotherInstanceStarted (const String& commandLine) override {
-        ignoreUnused(commandLine);
-    }
-
-    class MainWindow : public DocumentWindow
-    {
-    public:
-        MainWindow(String name) : DocumentWindow (name,
-            juce::Desktop::getInstance().getDefaultLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId),
-            DocumentWindow::allButtons)
-        {
-            setUsingNativeTitleBar (true);
-            setContentOwned (new SeqEditor(), true);
-            setResizable (true, true);
-            centreWithSize (getWidth(), getHeight());
-            setVisible (true);
+    }else{
+        if (!std::filesystem::exists("./settings.json")) {
+            settings = nlohmann::json::object();
+            SaveSettings();
+        } else {
+            std::ifstream i("./settings.json");
+            i >> settings;
+            i.close();
         }
+        DefaultDirectory = File::getSpecialLocation(File::userHomeDirectory).getFullPathName();
+        Instance = this;
+        mainWindow.reset (new MainWindow (getApplicationName()));
+    }
+}
+void seq64Application::shutdown() {
+    mainWindow = nullptr;
+}
+void seq64Application::systemRequestedQuit() {
+    quit();
+}
+void seq64Application::anotherInstanceStarted (const String& commandLine) {
+    ignoreUnused(commandLine);
+}
 
-        void closeButtonPressed() override {
-            JUCEApplication::getInstance()->systemRequestedQuit();
-        }
-    private:
-        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainWindow)
-    };
+int seq64Application::SettingsGetInteger(String key, int defaultValue) {
+    if (settings.contains(key.toStdString())) {
+        return settings.at(key.toStdString());
+    } else {
+        return defaultValue;
+    }
+}
 
-private:
-    std::unique_ptr<MainWindow> mainWindow;
-};
+String seq64Application::SettingsGetString(String key, String defaultValue) {
+    if (settings.contains(key.toStdString())) {
+        return settings.at(key.toStdString());
+    }
+    else {
+        return defaultValue;
+    }
+}
+
+void seq64Application::SettingsSetInteger(String key, int value) {
+    settings[key.toStdString()] = value;
+    SaveSettings();
+}
+
+void seq64Application::SettingsSetString(String key, String value) {
+    settings[key.toStdString()] = value.toStdString();
+    SaveSettings();
+}
+
+seq64Application::MainWindow::MainWindow(String name) : DocumentWindow (name,
+    juce::Desktop::getInstance().getDefaultLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId),
+    DocumentWindow::allButtons)
+{
+    setUsingNativeTitleBar (true);
+    setContentOwned (new SeqEditor(), true);
+    setResizable (true, true);
+    centreWithSize (getWidth(), getHeight());
+    setVisible (true);
+}
+
+void seq64Application::MainWindow::closeButtonPressed() {
+    JUCEApplication::getInstance()->systemRequestedQuit();
+}
 
 START_JUCE_APPLICATION (seq64Application)

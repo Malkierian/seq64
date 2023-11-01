@@ -19,4 +19,5 @@ set(SEQ64_GUI_ONLY_SOURCES
     SeqEditor.hpp
     TextListBox.cpp
     TextListBox.hpp
+	nlohmann/json.hpp
 PARENT_SCOPE)
